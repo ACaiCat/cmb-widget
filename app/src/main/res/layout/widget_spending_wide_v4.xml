@@ -1,0 +1,24 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal"
+    android:padding="18dp" android:background="@drawable/widget_surface_container">
+    <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+        <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/today_spending"
+            android:textColor="@color/widget_primary" android:textSize="14sp" android:fontFamily="sans-serif-medium" android:maxLines="1"/>
+        <TextView android:id="@+id/widget_amount" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:text="@string/zero_amount" android:gravity="center_vertical" android:textColor="@color/widget_primary" android:textStyle="bold"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="12sp" android:autoSizeMaxTextSize="34sp" android:autoSizeStepGranularity="1sp" android:maxLines="1"/>
+        <TextView android:id="@+id/widget_day_comparison" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="@color/widget_muted" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+    </LinearLayout>
+    <TextView android:layout_width="1dp" android:layout_height="match_parent" android:layout_marginHorizontal="16dp" android:layout_marginVertical="4dp"
+        android:background="@color/widget_primary" android:alpha="0.18"/>
+    <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/month_spending"
+            android:textColor="@color/widget_tertiary" android:textSize="14sp" android:fontFamily="sans-serif-medium" android:maxLines="1"/>
+        <TextView android:id="@+id/widget_month_amount" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:text="@string/zero_amount" android:gravity="center_vertical" android:textColor="@color/widget_tertiary" android:fontFamily="sans-serif-medium"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="12sp" android:autoSizeMaxTextSize="30sp" android:autoSizeStepGranularity="1sp" android:maxLines="1"/>
+        <TextView android:id="@+id/widget_month_comparison" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="@color/widget_muted" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+    </LinearLayout>
+</LinearLayout>
