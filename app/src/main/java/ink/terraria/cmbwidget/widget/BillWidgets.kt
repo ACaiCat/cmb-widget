@@ -35,13 +35,14 @@ object BillWidgets {
         val small=manager.getAppWidgetIds(ComponentName(context,SpendingWidget::class.java))
         val large=manager.getAppWidgetIds(ComponentName(context,EntriesWidget::class.java))
         if(small.isEmpty() && large.isEmpty()) return
+        val colors=WidgetColors(context)
         small.forEach { id ->
             val sizes=sizes(manager,id,listOf(SizeF(110f,110f),SizeF(270f,110f)))
-            manager.updateAppWidget(id,RemoteViews(sizes.associateWith {size -> spending(context,bills,month,previousDay,previousMonth,size.width>=270f)}))
+            manager.updateAppWidget(id,RemoteViews(sizes.associateWith {size -> spending(context,bills,month,previousDay,previousMonth,size.width>=270f,colors)}))
         }
         large.forEach { id ->
             val sizes=sizes(manager,id,listOf(SizeF(180f,180f),SizeF(280f,300f),SizeF(280f,400f),SizeF(280f,520f),SizeF(360f,640f)))
-            manager.updateAppWidget(id,RemoteViews(sizes.associateWith {size -> entries(context,bills,month,account!=null,size)}))
+            manager.updateAppWidget(id,RemoteViews(sizes.associateWith {size -> entries(context,bills,month,account!=null,size,colors)}))
         }
         midnight(context)
     }
@@ -60,9 +61,19 @@ object BillWidgets {
     private fun openApp(context: Context)=PendingIntent.getActivity(context,0,
         Intent(context,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("sync_now",true),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    private fun spending(context: Context,bills: List<Bill>,month: List<Bill>,previousDay: List<Bill>,previousMonth: List<Bill>,wide: Boolean): RemoteViews {
+    private fun spending(context: Context,bills: List<Bill>,month: List<Bill>,previousDay: List<Bill>,previousMonth: List<Bill>,wide: Boolean,colors: WidgetColors): RemoteViews {
         val total=netSpending(bills)
         return RemoteViews(context.packageName,if(wide) R.layout.widget_spending_wide_v4 else R.layout.widget_spending_v4).apply {
+            colors.background(this,R.id.widget_root) {it.surface}
+            colors.text(this,R.id.widget_title) {it.primary}
+            colors.text(this,R.id.widget_amount) {it.primary}
+            colors.text(this,R.id.widget_day_comparison) {it.onSurfaceVariant}
+            if(wide) {
+                colors.text(this,R.id.widget_month_label) {it.tertiary}
+                colors.text(this,R.id.widget_month_amount) {it.tertiary}
+                colors.text(this,R.id.widget_month_comparison) {it.onSurfaceVariant}
+                colors.background(this,R.id.widget_divider) {it.outlineVariant}
+            }
             setTextViewText(R.id.widget_amount,money(total))
             setTextViewText(R.id.widget_title,ledgerPeriodLabel()+"支出")
             val comparisonLabel=ledgerComparisonDayLabel()
@@ -75,7 +86,7 @@ object BillWidgets {
             setContentDescription(R.id.widget_root,ledgerPeriodLabel()+"人民币支出${money(total)}，点击打开账本")
         }
     }
-    private fun entries(context: Context,bills: List<Bill>,month: List<Bill>,configured: Boolean,size: SizeF): RemoteViews {
+    private fun entries(context: Context,bills: List<Bill>,month: List<Bill>,configured: Boolean,size: SizeF,colors: WidgetColors): RemoteViews {
         val total=netSpending(bills)
         val scale=context.resources.configuration.fontScale.coerceAtLeast(1f)
         val showDate=size.width>=240f
@@ -91,6 +102,15 @@ object BillWidgets {
         val shown=bills.take(count)
         val remaining=bills.drop(count)
         return RemoteViews(context.packageName,R.layout.widget_entries_v6).apply {
+            colors.background(this,R.id.widget_root) {it.surface}
+            colors.background(this,R.id.widget_summary) {it.primary}
+            colors.text(this,R.id.widget_title) {it.onPrimary}
+            colors.text(this,R.id.widget_amount) {it.onPrimary}
+            colors.text(this,R.id.widget_date) {it.onPrimary}
+            colors.text(this,R.id.widget_month_label) {it.onPrimary}
+            colors.text(this,R.id.widget_month_amount) {it.onPrimary}
+            colors.text(this,R.id.widget_empty) {it.onSurfaceVariant}
+
             setTextViewText(R.id.widget_amount,money(total))
             setTextViewText(R.id.widget_title,ledgerPeriodLabel()+"账单")
             setTextViewText(R.id.widget_date,ledgerDay().format(DateTimeFormatter.ofPattern("MM/dd")))
@@ -111,6 +131,14 @@ object BillWidgets {
                         else -> R.drawable.widget_row_middle
                     }
                     setInt(R.id.row_root,"setBackgroundResource",background)
+                    val incoming=bill.kind=="REFUND" || bill.kind=="INCOME"
+                    colors.background(this,R.id.row_root) {it.surfaceContainer}
+                    colors.text(this,R.id.row_merchant) {it.onSurface}
+                    colors.text(this,R.id.row_detail) {it.onSurfaceVariant}
+                    colors.text(this,R.id.row_amount) {if(incoming) it.tertiary else it.onSurface}
+                    colors.background(this,R.id.row_icon) {if(incoming) it.tertiaryContainer else it.secondaryContainer}
+                    colors.icon(this,R.id.row_icon) {if(incoming) it.onTertiaryContainer else it.onSecondaryContainer}
+
                     setViewPadding(R.id.row_root,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding)
                     val merchant=bill.merchant.replace(Regex("^(支付宝-支付宝-消费-|财付通-微信支付-|美团-美团App|支付宝-|网银在线-京东商城-)"),"")
                     setTextViewText(R.id.row_merchant,merchant)
@@ -127,10 +155,14 @@ object BillWidgets {
             setTextViewText(R.id.widget_overflow_title,"其余${remaining.size}笔账单")
             setTextViewText(R.id.widget_overflow_amount,sums)
             val incoming=remaining.isNotEmpty() && remaining.groupBy {it.currency}.all {(currency,items) -> balanceChange(items,currency)>0}
-            setTextColor(R.id.widget_overflow_amount,context.getColor(if(incoming) R.color.widget_tertiary else R.color.widget_on_surface))
+            colors.text(this,R.id.widget_overflow_amount) {if(incoming) it.tertiary else it.onSurface}
+            colors.text(this,R.id.widget_overflow_title) {it.onSurface}
+            colors.background(this,R.id.widget_overflow_icon) {it.tertiaryContainer}
+            colors.icon(this,R.id.widget_overflow_icon) {it.onTertiaryContainer}
             setViewLayoutHeight(R.id.widget_overflow,rowHeight,android.util.TypedValue.COMPLEX_UNIT_DIP)
             setViewPadding(R.id.widget_overflow,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding)
             setInt(R.id.widget_overflow,"setBackgroundResource",if(shown.isEmpty()) R.drawable.widget_row_single else R.drawable.widget_row_last)
+            colors.background(this,R.id.widget_overflow) {it.surfaceContainer}
             setViewVisibility(R.id.widget_overflow,if(remaining.isEmpty()) View.GONE else View.VISIBLE)
             setOnClickPendingIntent(R.id.widget_root,openApp(context))
             setOnClickPendingIntent(R.id.widget_overflow,openApp(context))

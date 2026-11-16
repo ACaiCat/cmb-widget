@@ -1,0 +1,12 @@
+<resources>
+    <color name="widget_tertiary">@android:color/system_tertiary_light</color>
+    <color name="widget_tertiary_container">@android:color/system_tertiary_container_light</color>
+    <color name="widget_muted">@android:color/system_on_surface_variant_light</color>
+    <color name="widget_primary">@android:color/system_primary_light</color>
+    <color name="widget_on_primary">@android:color/system_on_primary_light</color>
+    <color name="widget_row_surface">@android:color/system_surface_container_light</color>
+    <color name="widget_container">@android:color/system_secondary_container_light</color>
+    <color name="widget_on_container">@android:color/system_on_secondary_container_light</color>
+    <color name="widget_surface">@android:color/system_surface_light</color>
+    <color name="widget_on_surface">@android:color/system_on_surface_light</color>
+</resources>

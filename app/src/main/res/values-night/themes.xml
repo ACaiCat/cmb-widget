@@ -1,0 +1,1 @@
+<resources><style name="Theme.CMBWidget" parent="android:Theme.Material.NoActionBar"><item name="android:forceDarkAllowed">false</item></style></resources>
