@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
         selected.value=intent.getLongExtra("bill_id",-1).takeIf { it>=0 }
         setContent { CMBWidgetTheme { LedgerApp(selected.value) { selected.value=null } } }
     }
-    override fun onStart() { super.onStart(); MailSync.cancel(this); MailSync.sync(this); MailSync.notify(this) }
+    override fun onStart() { super.onStart(); MailSync.sync(this); MailSync.notify(this) }
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); selected.value=intent.getLongExtra("bill_id",-1).takeIf { it>=0 }; if(intent.getBooleanExtra("sync_now",false)) MailSync.sync(this) }
 }
 internal data class LedgerState(val account: MailAccount?=null,val bills: List<Bill> = emptyList(),val issues: List<ParseIssue> = emptyList(),val status: String="添加邮箱，开始自动记账",val last: Long=0,val processed: Int=0,val total: Int=0,val phase: String="discover")
@@ -139,11 +139,16 @@ private fun LedgerApp(selectedId: Long?,dismissSelection: () -> Unit) {
     }
     if(config) AccountDialog(state.account,onDismiss={config=false},onSave={account ->
         scope.launch {
-            val result=withContext(Dispatchers.IO) {runCatching {AccountVault(context).save(account)}}
-            result.onSuccess {config=false; MailSync.sync(context); revision++}.onFailure {error="配置保存失败，请重试"}
+            val result=withContext(Dispatchers.IO) {runCatching {
+                val vault=AccountVault(context)
+                val changed=vault.load()?.key!=account.key
+                vault.save(account)
+                if(changed) context.getSharedPreferences("sync",Context.MODE_PRIVATE).edit().clear().apply()
+            }}
+            result.onSuccess {config=false; MailSync.sync(context,replace=true); revision++}.onFailure {error="配置保存失败，请重试"}
         }
     },onDisconnect={
-        MailSync.cancel(context); AccountVault(context).clear(); context.getSharedPreferences("sync",Context.MODE_PRIVATE).edit().clear().apply()
+        AccountVault(context).clear(); MailSync.cancel(context); context.getSharedPreferences("sync",Context.MODE_PRIVATE).edit().clear().apply()
         config=false; revision++; BillWidgets.refresh(context)
     })
     if(showIssues) AlertDialog(onDismissRequest={showIssues=false},title={Text("待检查邮件 · ${state.issues.size}")},text={

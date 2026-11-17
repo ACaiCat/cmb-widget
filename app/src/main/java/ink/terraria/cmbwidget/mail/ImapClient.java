@@ -15,8 +15,12 @@ public final class ImapClient implements Closeable {
     private int tag=0;
     public String validity="";
     public ImapClient(String host,int port,String user,String password) throws IOException {
+        this(host,port,user,password,connection -> {});
+    }
+    public ImapClient(String host,int port,String user,String password,java.util.function.Consumer<Closeable> onConnection) throws IOException {
         Socket transport=new Socket();
         try {
+            onConnection.accept(transport);
             transport.connect(new InetSocketAddress(host,port),20000);
             socket=(SSLSocket)((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(transport,host,port,true);
             socket.setSoTimeout(25000);
