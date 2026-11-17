@@ -29,7 +29,7 @@ internal fun BillDetailsSheet(bill: Bill, saving: Boolean, onDismiss: () -> Unit
                 IconButton(onClick=onDismiss) { LedgerIcon(R.drawable.ic_close,"关闭详情") }
             }
             Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Text(bill.merchant,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold)
+                Text(merchantName(bill.merchant),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold)
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     Text(amount,style=if(maxWidth<280.dp || amount.length>13) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
                         fontWeight=FontWeight.Bold,color=if(incoming) colors.tertiary else colors.onSurface)
@@ -39,7 +39,7 @@ internal fun BillDetailsSheet(bill: Bill, saving: Boolean, onDismiss: () -> Unit
                 Column(Modifier.fillMaxWidth().padding(20.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
                     DetailField("类型",kindName(bill.kind))
                     DetailField("交易时间",bill.date.replace('T',' '))
-                    DetailField("账户",if(bill.card.isEmpty()) "招商银行" else "招商银行 · 尾号 ${bill.card}")
+                    if(bill.card.isNotBlank()) DetailField("卡尾号",bill.card)
                 }
             }
             Surface(onClick={onExcludedChange(!bill.excluded)},enabled=!saving,shape=RoundedCornerShape(24.dp),color=colors.surfaceContainerLow) {

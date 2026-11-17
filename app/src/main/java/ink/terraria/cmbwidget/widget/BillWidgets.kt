@@ -140,13 +140,13 @@ object BillWidgets {
                     colors.icon(this,R.id.row_icon) {if(incoming) it.onTertiaryContainer else it.onSecondaryContainer}
 
                     setViewPadding(R.id.row_root,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding)
-                    val merchant=bill.merchant.replace(Regex("^(支付宝-支付宝-消费-|财付通-微信支付-|美团-美团App|支付宝-|网银在线-京东商城-)"),"")
+                    val merchant=merchantName(bill.merchant)
                     setTextViewText(R.id.row_merchant,merchant)
                     val sign=if(bill.kind=="EXPENSE") "−" else if(bill.kind=="REFUND" || bill.kind=="INCOME") "+" else ""
                     setTextViewText(R.id.row_amount,sign+money(bill.minor,bill.currency))
                     setTextViewText(R.id.row_detail,bill.date.substring(11,16)+if(bill.excluded) " · 不计入统计" else "")
                     setViewLayoutHeight(R.id.row_root,rowHeight,android.util.TypedValue.COMPLEX_UNIT_DIP)
-                    setContentDescription(R.id.row_root,"${bill.merchant}，${kindName(bill.kind)}${money(bill.minor,bill.currency)}")
+                    setContentDescription(R.id.row_root,"$merchant，${kindName(bill.kind)}${money(bill.minor,bill.currency)}")
                     setOnClickPendingIntent(R.id.row_root,openApp(context))
                 }
                 addView(R.id.widget_rows,row)

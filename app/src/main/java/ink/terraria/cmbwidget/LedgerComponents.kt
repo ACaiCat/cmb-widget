@@ -119,7 +119,7 @@ import java.time.format.DateTimeFormatter
 @Composable internal fun BillCard(bill: Bill,first: Boolean,last: Boolean,onClick: (Bill) -> Unit) {
     val colors=MaterialTheme.colorScheme
     val incoming=bill.kind=="REFUND" || bill.kind=="INCOME"
-    val merchant=bill.merchant.replace(Regex("^(支付宝-支付宝-消费-|财付通-微信支付-|美团-美团App|支付宝-|网银在线-京东商城-)"),"")
+    val merchant=merchantName(bill.merchant)
     val cornerTop=if(first) 24.dp else 6.dp
     val cornerBottom=if(last) 24.dp else 6.dp
     Surface(onClick={onClick(bill)},shape=RoundedCornerShape(cornerTop,cornerTop,cornerBottom,cornerBottom),color=colors.surfaceContainer) {
