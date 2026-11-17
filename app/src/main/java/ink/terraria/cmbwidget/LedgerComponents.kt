@@ -91,7 +91,11 @@ import java.time.format.DateTimeFormatter
                 }
                 Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)) {
                     Text(if(loading) "读取账本" else if(busy) "正在整理邮件" else if(state.account==null) "连接账单邮箱" else "账本已就绪",style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)
-                    Text(if(busy) state.status else if(state.last>0) Instant.ofEpochMilli(state.last).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))+" 更新 · 全文件夹" else "打开即同步，清理后台也没关系",style=MaterialTheme.typography.bodySmall,color=colors.onSurfaceVariant,maxLines=2,overflow=TextOverflow.Ellipsis)
+                    if(busy) Text(state.status,style=MaterialTheme.typography.bodySmall,color=colors.onSurfaceVariant,maxLines=2,overflow=TextOverflow.Ellipsis)
+                    if(state.account!=null) {
+                        val lastUpdate=if(state.last>0) Instant.ofEpochMilli(state.last).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")) else "尚未同步"
+                        Text("上次更新：$lastUpdate",style=MaterialTheme.typography.bodySmall,color=colors.onSurfaceVariant,maxLines=2,overflow=TextOverflow.Ellipsis)
+                    }
                 }
                 if(busy && known) Text("${((state.processed.toLong()*100)/state.total).coerceIn(0,100)}%",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,color=colors.primary)
                 if(!busy) FilledIconButton(onClick=onSync,modifier=Modifier.size(48.dp)) { LedgerIcon(R.drawable.ic_sync,"立即同步") }
