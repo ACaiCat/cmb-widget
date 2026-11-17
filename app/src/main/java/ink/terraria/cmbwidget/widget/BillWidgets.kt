@@ -26,7 +26,7 @@ object BillWidgets {
     fun refresh(context: Context) {
         val manager=context.getSystemService(AppWidgetManager::class.java)
         val account=AccountVault(context).load()
-        val all=if(account==null) emptyList() else BillStore(context).use { it.bills(account.key) }
+        val all=if(account==null) emptyList() else BillStore(context).use { it.bills(account.key).filterNot { bill -> bill.excluded } }
         val today=ledgerDay()
         val bills=all.filter {it.date.startsWith(today.toString())}
         val month=all.filter {it.date.startsWith(today.toString().take(7))}
@@ -144,7 +144,7 @@ object BillWidgets {
                     setTextViewText(R.id.row_merchant,merchant)
                     val sign=if(bill.kind=="EXPENSE") "−" else if(bill.kind=="REFUND" || bill.kind=="INCOME") "+" else ""
                     setTextViewText(R.id.row_amount,sign+money(bill.minor,bill.currency))
-                    setTextViewText(R.id.row_detail,bill.date.substring(11,16)+if(bill.excluded) " · 不计入统计" else "")
+                    setTextViewText(R.id.row_detail,bill.date.substring(11,16))
                     setViewLayoutHeight(R.id.row_root,rowHeight,android.util.TypedValue.COMPLEX_UNIT_DIP)
                     setContentDescription(R.id.row_root,"$merchant，${kindName(bill.kind)}${money(bill.minor,bill.currency)}")
                     setOnClickPendingIntent(R.id.row_root,openApp(context))
