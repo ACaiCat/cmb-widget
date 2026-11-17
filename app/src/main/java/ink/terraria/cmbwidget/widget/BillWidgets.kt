@@ -144,7 +144,7 @@ object BillWidgets {
                     setTextViewText(R.id.row_merchant,merchant)
                     val sign=if(bill.kind=="EXPENSE") "−" else if(bill.kind=="REFUND" || bill.kind=="INCOME") "+" else ""
                     setTextViewText(R.id.row_amount,sign+money(bill.minor,bill.currency))
-                    setTextViewText(R.id.row_detail,bill.date.substring(11,16))
+                    setTextViewText(R.id.row_detail,bill.date.substring(11,16)+if(bill.excluded) " · 不计入统计" else "")
                     setViewLayoutHeight(R.id.row_root,rowHeight,android.util.TypedValue.COMPLEX_UNIT_DIP)
                     setContentDescription(R.id.row_root,"${bill.merchant}，${kindName(bill.kind)}${money(bill.minor,bill.currency)}")
                     setOnClickPendingIntent(R.id.row_root,openApp(context))

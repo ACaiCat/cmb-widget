@@ -19,6 +19,9 @@ public class ParserChecks {
         check("您账户1234于01月02日12:18在哈啰-顺风车发生一网通支付退货入账人民币21.50元，余额21.50元",2150,"REFUND","哈啰-顺风车");
         check("您尾号1234的账户于01月02日发起朝朝宝转入，交易金额：人民币3,000元。",300000,"TRANSFER","转入");
         check("您账户1234于01月02日19:25银联扣款人民币1.52元，余额3.08元（银联在线支付，示例店）",152,"EXPENSE","银联在线支付，示例店");
+        check("您账户1234于01月02日23:25转账汇款人民币40.00，余额80.00，收款人：示例收款人，请以收款人实际到账为准",4000,"EXPENSE","示例收款人");
+        check("您账户1234于01月02日00:21转账汇款人民币50.00，余额30.00，收款人: 示例收款人，请以收款人实际到账为准",5000,"EXPENSE","示例收款人");
+        check("您账户1234于01月02日他行实时转入人民币42.12，余额80.00，付方：示例付款人。",4212,"INCOME","示例付款人");
         var rollover=BillParser.parse("", "您账户1234于12月31日23:59消费人民币1.00元，余额99.00",LocalDate.of(2026,1,1)).get(0);
         if(!rollover.date.startsWith("2025-12-31")) throw new AssertionError("year rollover");
         if(!BillParser.parse("优惠","存款年利率3.00%，余额200.00元",LocalDate.now()).isEmpty()) throw new AssertionError("marketing");

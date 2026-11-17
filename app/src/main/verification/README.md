@@ -25,3 +25,13 @@ java -cp $classes ParserChecks
 ```
 
 `SyncControlTest` 覆盖取消前后建立连接、阻止已取消任务连接 IMAP、解除阻塞的 socket 读取，以及连接与取消并发时的资源释放。
+
+`BillExclusionTest` 检查排除支出、退款和收入后的合计，以及恢复统计和币种隔离。
+
+数据库升级和详情开关的真机测试使用独立包名，避免改动正式账本：
+
+```shell
+./gradlew :app:connectedDebugAndroidTest -PisolatedTests=true -Pandroid.testInstrumentationRunnerArguments.class=ink.terraria.cmbwidget.BillStoreInstrumentedTest,ink.terraria.cmbwidget.BillDetailsSheetTest
+```
+
+覆盖旧数据库升级修正收款人、重扫后保留排除设置、账户隔离、详情开关保存与恢复，以及大字体操作。

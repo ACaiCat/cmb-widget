@@ -49,17 +49,26 @@ class AccountVault(context: Context) {
     fun clear() { prefs.edit().clear().commit() }
 }
 
-data class Bill(val id: Long, val date: String, val merchant: String, val currency: String, val card: String, val kind: String, val minor: Long)
+data class Bill @JvmOverloads constructor(val id: Long, val date: String, val merchant: String, val currency: String, val card: String, val kind: String, val minor: Long, val excluded: Boolean = false)
 data class ParseIssue(val subject: String, val reason: String)
-class BillStore(context: Context) : SQLiteOpenHelper(context.applicationContext, "bills.db", null, 2) {
+class BillStore(context: Context) : SQLiteOpenHelper(context.applicationContext, "bills.db", null, 3) {
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("CREATE TABLE bills (id INTEGER PRIMARY KEY, account TEXT NOT NULL, source TEXT NOT NULL, position INTEGER NOT NULL, date TEXT NOT NULL, merchant TEXT NOT NULL, currency TEXT NOT NULL, card TEXT NOT NULL, kind TEXT NOT NULL, minor INTEGER NOT NULL CHECK(minor>0), UNIQUE(account,source,position))")
+        db.execSQL("CREATE TABLE bills (id INTEGER PRIMARY KEY, account TEXT NOT NULL, source TEXT NOT NULL, position INTEGER NOT NULL, date TEXT NOT NULL, merchant TEXT NOT NULL, currency TEXT NOT NULL, card TEXT NOT NULL, kind TEXT NOT NULL, minor INTEGER NOT NULL CHECK(minor>0), excluded INTEGER NOT NULL DEFAULT 0 CHECK(excluded IN(0,1)), UNIQUE(account,source,position))")
         db.execSQL("CREATE INDEX bill_day ON bills(account,date)")
         db.execSQL("CREATE TABLE issues (account TEXT NOT NULL, source TEXT NOT NULL, subject TEXT NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(account,source))")
         createProgress(db)
     }
     private fun createProgress(db: SQLiteDatabase) { db.execSQL("CREATE TABLE IF NOT EXISTS processed (account TEXT NOT NULL, folder TEXT NOT NULL, uid INTEGER NOT NULL, PRIMARY KEY(account,folder,uid))") }
-    override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) { if(old<2) createProgress(db) }
+    override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
+        if(old<2) createProgress(db)
+        if(old<3) {
+            db.execSQL("ALTER TABLE bills ADD COLUMN excluded INTEGER NOT NULL DEFAULT 0 CHECK(excluded IN(0,1))")
+            // Earlier transfer parsing kept the delimiter before a payee's name.
+            db.execSQL("UPDATE bills SET merchant=ltrim(merchant, ' ：:') WHERE substr(merchant,1,1) IN ('：', ':')")
+        }
+    }
+    fun setExcluded(account: String, id: Long, excluded: Boolean): Boolean = writableDatabase.update("bills",
+        ContentValues().apply {put("excluded",if(excluded) 1 else 0)}, "account=? AND id=?",arrayOf(account,id.toString()))==1
     fun processed(account: String, folder: String): Set<Long> = readableDatabase.rawQuery("SELECT uid FROM processed WHERE account=? AND folder=?",arrayOf(account,folder)).use { c -> buildSet { while(c.moveToNext()) add(c.getLong(0)) } }
     fun markProcessed(account: String, folder: String, uid: Long) { writableDatabase.insertWithOnConflict("processed",null,ContentValues().apply { put("account",account); put("folder",folder); put("uid",uid) },SQLiteDatabase.CONFLICT_IGNORE) }
     fun resetProgress(account: String) { writableDatabase.delete("processed","account=?",arrayOf(account)) }
@@ -89,8 +98,8 @@ class BillStore(context: Context) : SQLiteOpenHelper(context.applicationContext,
     fun bills(account: String, today: Boolean = false): List<Bill> {
         val clause = if(today) " AND date>=? AND date<?" else ""
         val args = if(today) arrayOf(account, "${LocalDate.now()}T00:00:00", "${LocalDate.now().plusDays(1)}T00:00:00") else arrayOf(account)
-        return readableDatabase.rawQuery("SELECT id,date,merchant,currency,card,kind,minor FROM bills WHERE account=?$clause ORDER BY date DESC,id DESC", args).use { c ->
-            buildList { while(c.moveToNext()) add(Bill(c.getLong(0),c.getString(1),c.getString(2),c.getString(3),c.getString(4),c.getString(5),c.getLong(6))) }
+        return readableDatabase.rawQuery("SELECT id,date,merchant,currency,card,kind,minor,excluded FROM bills WHERE account=?$clause ORDER BY date DESC,id DESC", args).use { c ->
+            buildList { while(c.moveToNext()) add(Bill(c.getLong(0),c.getString(1),c.getString(2),c.getString(3),c.getString(4),c.getString(5),c.getLong(6),c.getInt(7)!=0)) }
         }
     }
 }

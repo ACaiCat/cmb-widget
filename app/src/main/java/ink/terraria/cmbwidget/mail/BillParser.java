@@ -62,7 +62,7 @@ public final class BillParser {
             Matcher at=Pattern.compile("(?:在|向|通过)(.+)").matcher(prefix);
             if (at.find()) merchant=at.group(1).replaceAll("(?:发生)?[，,。；;\\s]*$","").trim();
             if (merchant.equals(action)) {
-                Matcher note=Pattern.compile("(?:备注[：:]|元?[（(])(.+?)[）)]?$|(?:付方|收款人)([^，。]+)").matcher(chunk.substring(end));
+                Matcher note=Pattern.compile("(?:备注[：:]|元?[（(])(.+?)[）)]?$|(?:付方|收款人)[：:\\s]*([^，。；;\\n]+)").matcher(chunk.substring(end));
                 if(note.find()) merchant=(note.group(1)!=null?note.group(1):note.group(2)).trim();
             }
             Matcher named=Pattern.compile("(?:商户(?:名称)?|交易地点|交易摘要|对方户名)[：:\\s]+([^，。；;\\n]+)").matcher(chunk);

@@ -65,6 +65,7 @@ private fun LedgerApp(selectedId: Long?,dismissSelection: () -> Unit) {
     var config by remember { mutableStateOf(false) }
     var showIssues by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var savingBill by remember { mutableStateOf<Long?>(null) }
     var revision by remember { mutableIntStateOf(0) }
     var now by remember { mutableStateOf(ledgerDay()) }
     LaunchedEffect(revision) {
@@ -158,13 +159,21 @@ private fun LedgerApp(selectedId: Long?,dismissSelection: () -> Unit) {
     },confirmButton={TextButton(onClick={scope.launch { withContext(Dispatchers.IO) { state.account?.let { BillStore(context).use { db -> db.resetProgress(it.key) } } }; showIssues=false; sync() }}) {Text("重新扫描")}},dismissButton={TextButton(onClick={showIssues=false}) {Text("关闭")}})
     if(error!=null) AlertDialog(onDismissRequest={error=null},title={Text("提示")},text={Text(error!!)},confirmButton={TextButton(onClick={error=null}) {Text("知道了")}})
     val selected=state.bills.find {it.id==selectedId}
-    if(selected!=null) AlertDialog(onDismissRequest=dismissSelection,title={Text(selected.merchant)},text={
-        Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text(money(selected.minor,selected.currency),style=MaterialTheme.typography.headlineMedium)
-            Text("${kindName(selected.kind)} · ${selected.date.replace('T',' ')}")
-            if(selected.card.isNotEmpty()) Text("招商银行 · 尾号 ${selected.card}")
+    if(selected!=null) BillDetailsSheet(selected,savingBill==selected.id,onDismiss=dismissSelection,onExcludedChange={excluded ->
+        val accountKey=state.account?.key
+        if(accountKey!=null && savingBill==null) scope.launch {
+            savingBill=selected.id
+            val result=withContext(Dispatchers.IO) {runCatching {
+                check(BillStore(context).use { it.setExcluded(accountKey,selected.id,excluded) })
+                MailSync.notify(context)
+            }}
+            result.onSuccess {
+                if(state.account?.key==accountKey) state=state.copy(bills=state.bills.map {if(it.id==selected.id) it.copy(excluded=excluded) else it})
+                revision++
+            }.onFailure {error="修改统计设置失败，请重试"}
+            savingBill=null
         }
-    },confirmButton={TextButton(onClick=dismissSelection) {Text("关闭")}})
+    })
 }
 @Composable private fun AccountDialog(account: MailAccount?,onDismiss: () -> Unit,onSave: (MailAccount) -> Unit,onDisconnect: () -> Unit) {
     var server by remember {mutableStateOf(account?.let {"${it.host}:${it.port}"} ?: "imap.qq.com:993")}

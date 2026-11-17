@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable internal fun SpendingCard(bills: List<Bill>) {
     val colors=MaterialTheme.colorScheme
-    val expenses=bills.filter {it.kind=="EXPENSE"}
+    val expenses=bills.filter {!it.excluded && it.kind=="EXPENSE"}
     val amount=java.math.BigDecimal.valueOf(netSpending(bills),2).toPlainString()
     Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
         Surface(color=colors.primary,contentColor=colors.onPrimary,shape=RoundedCornerShape(topStart=32.dp,topEnd=32.dp,bottomEnd=8.dp,bottomStart=8.dp)) {
@@ -65,14 +65,14 @@ import java.time.format.DateTimeFormatter
                 Surface(color=color,contentColor=foreground,shape=shape,modifier=modifier) {
                     Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) { LedgerIcon(icon,modifier=Modifier.size(16.dp)); Text(label,style=MaterialTheme.typography.labelLarge) }
-                        Text(money(bills.filter {it.kind==kind && it.currency=="CNY"}.sumOf {it.minor}),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold,maxLines=1)
+                        Text(money(bills.filter {!it.excluded && it.kind==kind && it.currency=="CNY"}.sumOf {it.minor}),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold,maxLines=1)
                     }
                 }
             }
             Metric("退款","REFUND",R.drawable.ic_down,colors.tertiaryContainer,colors.onTertiaryContainer,RoundedCornerShape(8.dp,8.dp,8.dp,28.dp),Modifier.weight(1f))
             Metric("收入","INCOME",R.drawable.ic_up,colors.secondaryContainer,colors.onSecondaryContainer,RoundedCornerShape(8.dp,8.dp,28.dp,8.dp),Modifier.weight(1f))
         }
-        if(bills.any {it.currency!="CNY"}) Text("外币单独展示，不折算汇率",style=MaterialTheme.typography.labelSmall)
+        if(bills.any {!it.excluded && it.currency!="CNY"}) Text("外币单独展示，不折算汇率",style=MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -129,7 +129,7 @@ import java.time.format.DateTimeFormatter
             }
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 Text(merchant,style=MaterialTheme.typography.bodyLarge,fontWeight=FontWeight.Medium,maxLines=2,overflow=TextOverflow.Ellipsis)
-                Text("${bill.date.substring(11,16)} · ${kindName(bill.kind)}",style=MaterialTheme.typography.labelMedium,color=colors.onSurfaceVariant)
+                Text("${bill.date.substring(11,16)} · ${if(bill.excluded) "不计入统计" else kindName(bill.kind)}",style=MaterialTheme.typography.labelMedium,color=colors.onSurfaceVariant)
             }
             Text((if(incoming) "+" else if(bill.kind=="EXPENSE") "−" else "")+money(bill.minor,bill.currency),modifier=Modifier.widthIn(max=140.dp),style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,color=if(incoming) colors.tertiary else colors.onSurface,maxLines=2)
         }
