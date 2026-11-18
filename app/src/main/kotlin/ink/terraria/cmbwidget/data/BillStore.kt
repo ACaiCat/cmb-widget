@@ -49,7 +49,7 @@ class AccountVault(context: Context) {
     fun clear() { prefs.edit().clear().commit() }
 }
 
-data class Bill @JvmOverloads constructor(val id: Long, val date: String, val merchant: String, val currency: String, val card: String, val kind: String, val minor: Long, val excluded: Boolean = false)
+data class Bill(val id: Long, val date: String, val merchant: String, val currency: String, val card: String, val kind: String, val minor: Long, val excluded: Boolean = false)
 data class ParseIssue(val subject: String, val reason: String)
 class BillStore(context: Context) : SQLiteOpenHelper(context.applicationContext, "bills.db", null, 3) {
     override fun onCreate(db: SQLiteDatabase) {

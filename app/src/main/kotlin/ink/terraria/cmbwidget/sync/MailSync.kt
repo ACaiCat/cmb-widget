@@ -154,7 +154,7 @@ object MailSync {
                                     val source = if (message.id.isBlank()) digest(message.subject + message.received + message.body) else digest(message.id)
                                     val sender = Regex("(?i)(?:<|^)(95555[^<>\\s]*@(?:[a-z0-9-]+\\.)*cmbchina\\.com)>?$")
                                     if (!message.subject.contains("交易流水") && !message.body.contains("附件已加密") && sender.containsMatchIn(message.from.trim()) && Regex("账户.*通知|账单|交易.*通知|消费.*通知|还款.*通知").containsMatchIn(message.subject)) {
-                                        val entries = BillParser.parse(message.subject, message.body, message.received)
+                                        val entries = BillParser.parse(message.body, message.received)
                                         if (entries.isEmpty()) store.issue(account.key, source, message.subject, "未匹配交易格式 · ${folder.name}")
                                         else { store.save(account.key, source, entries); store.resolveIssue(account.key, source) }
                                     }

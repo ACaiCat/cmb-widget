@@ -13,8 +13,8 @@ android {
         applicationId = "ink.terraria.cmbwidget"
         minSdk = 32
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

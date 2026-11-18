@@ -132,7 +132,7 @@ object BillWidgets {
                     }
                     setInt(R.id.row_root,"setBackgroundResource",background)
                     val incoming=bill.kind=="REFUND" || bill.kind=="INCOME"
-                    colors.background(this,R.id.row_root) {it.surfaceContainer}
+                    colors.rowBackground(this,R.id.row_root)
                     colors.text(this,R.id.row_merchant) {it.onSurface}
                     colors.text(this,R.id.row_detail) {it.onSurfaceVariant}
                     colors.text(this,R.id.row_amount) {if(incoming) it.tertiary else it.onSurface}
@@ -162,7 +162,7 @@ object BillWidgets {
             setViewLayoutHeight(R.id.widget_overflow,rowHeight,android.util.TypedValue.COMPLEX_UNIT_DIP)
             setViewPadding(R.id.widget_overflow,horizontalPadding,verticalPadding,horizontalPadding,verticalPadding)
             setInt(R.id.widget_overflow,"setBackgroundResource",if(shown.isEmpty()) R.drawable.widget_row_single else R.drawable.widget_row_last)
-            colors.background(this,R.id.widget_overflow) {it.surfaceContainer}
+            colors.rowBackground(this,R.id.widget_overflow)
             setViewVisibility(R.id.widget_overflow,if(remaining.isEmpty()) View.GONE else View.VISIBLE)
             setOnClickPendingIntent(R.id.widget_root,openApp(context))
             setOnClickPendingIntent(R.id.widget_overflow,openApp(context))
